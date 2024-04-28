@@ -75,6 +75,7 @@ public class MenuService {
 				break;
 			case 2:
 				//panggil fitur Booking Bengkel
+				BengkelService.bookService(customerId);
 				break;
 			case 3:
 				//panggil fitur Top Up Saldo Coin

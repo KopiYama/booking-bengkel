@@ -1,6 +1,7 @@
 package com.kopiyama.services;
 
 import com.kopiyama.models.Car;
+import com.kopiyama.models.ItemService;
 import com.kopiyama.models.Vehicle;
 
 import java.util.List;
@@ -46,7 +47,34 @@ public class PrintService {
 	    }
 	    System.out.printf(line);
 	}
-	
+
+	public static void printService(List<ItemService> services) {
+		if (services == null || services.isEmpty()) {
+			System.out.println("Tidak ada layanan tersedia untuk kendaraan ini.");
+			return;
+		}
+
+		String header = "+-------+-----------------+-------------------------+----------------------+----------+";
+		String rowFormat = "| %-5s | %-15s | %-23s | %-20s | %-8s |%n";
+
+		System.out.println("List Service yang Tersedia:");
+		System.out.println(header);
+		System.out.format(rowFormat, "No", "Service Id", "Nama Service", "Tipe Kendaraan", "Harga");
+		System.out.println(header);
+
+		int count = 1;
+		for (ItemService service : services) {
+			System.out.format(rowFormat,
+					count++,
+					service.getServiceId(),
+					service.getServiceName(),
+					service.getVehicleType(),
+					String.format("%.2f", service.getPrice()));
+		}
+		System.out.println(header);
+	}
+
+
 	//Silahkan Tambahkan function print sesuai dengan kebutuhan.
 	
 }
