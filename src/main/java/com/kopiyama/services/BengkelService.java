@@ -114,6 +114,28 @@ public class BengkelService {
         System.out.printf("Total Pembayaran : %.2f%n", bookingOrder.getTotalPayment());
     }
 
+    public static void topUpSaldoCoin(String customerId) {
+        Customer customer = getCustomerById(customerId);
+
+        // Cek apakah customer adalah MemberCustomer
+        if (!(customer instanceof MemberCustomer)) {
+            System.out.println("Maaf, Anda bukan member dari bengkel ini.\n");
+            return;
+        }
+
+        MemberCustomer member = (MemberCustomer) customer;
+        System.out.println("Masukan besaran Top Up:");
+        double amount = Double.parseDouble(input.nextLine());
+
+        // Menambahkan saldo
+        double newSaldo = member.getSaldoCoin() + amount;
+        member.setSaldoCoin(newSaldo);
+        CustomerRepository.updateCustomer(member);  // Perbarui data customer di repositori
+
+        System.out.println("Top Up Berhasil!!");
+        System.out.printf("Total Saldo Coin anda sekarang : %.2f%n", member.getSaldoCoin());
+    }
+
     private static void updateMemberSaldo(MemberCustomer member, double amount) {
         double newSaldo = member.getSaldoCoin() - amount;
         member.setSaldoCoin(newSaldo);

@@ -79,6 +79,7 @@ public class MenuService {
 				break;
 			case 3:
 				//panggil fitur Top Up Saldo Coin
+				BengkelService.topUpSaldoCoin(customerId);
 				break;
 			case 4:
 				//panggil fitur Informasi Booking Order
