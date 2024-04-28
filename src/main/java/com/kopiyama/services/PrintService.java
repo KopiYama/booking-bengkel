@@ -1,5 +1,6 @@
 package com.kopiyama.services;
 
+import com.kopiyama.models.BookingOrder;
 import com.kopiyama.models.Car;
 import com.kopiyama.models.ItemService;
 import com.kopiyama.models.Vehicle;
@@ -70,6 +71,38 @@ public class PrintService {
 					service.getServiceName(),
 					service.getVehicleType(),
 					String.format("%.2f", service.getPrice()));
+		}
+		System.out.println(header);
+	}
+
+	public static void printBookingOrders(List<BookingOrder> bookingOrders) {
+		if (bookingOrders == null || bookingOrders.isEmpty()) {
+			System.out.println("Tidak ada booking order yang tersedia.");
+			return;
+		}
+		System.out.println("List Booking Order");
+		String header = "+----+------------------------+---------------------+----------------------+-----------------------+------------------------+---------------------------------------------------------------+";
+		String rowFormat = "| %-2s | %-22s | %-19s | %-20s | %-21s | %-22s | %-59s |%n";
+
+		System.out.println(header);
+		System.out.format(rowFormat, "No", "Booking Id", "Nama Customer", "Payment Method", "Total Service", "Total Payment", "List Service");
+		System.out.println(header);
+
+		int count = 1;
+		for (BookingOrder order : bookingOrders) {
+			String servicesList = order.getServices().stream()
+					.map(ItemService::getServiceName)
+					.reduce((a, b) -> a + ", " + b)
+					.orElse("No Services");
+
+			System.out.format(rowFormat,
+					count++,
+					order.getBookingId(),
+					order.getCustomer().getName(),
+					order.getPaymentMethod(),
+					String.format("%.2f", order.getTotalServicePrice()),
+					String.format("%.2f", order.getTotalPayment()),
+					servicesList);
 		}
 		System.out.println(header);
 	}

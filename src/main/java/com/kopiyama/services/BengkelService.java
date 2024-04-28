@@ -2,12 +2,11 @@ package com.kopiyama.services;
 
 import com.kopiyama.interfaces.IBengkelPayment;
 import com.kopiyama.models.*;
+import com.kopiyama.repositories.BookingOrderRepository;
 import com.kopiyama.repositories.CustomerRepository;
 import com.kopiyama.repositories.ItemServiceRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -61,7 +60,6 @@ public class BengkelService {
         System.out.println("Masukan Vehicle Id:");
         String vehicleId = input.nextLine();
 
-        // Check if the customer owns the vehicle
         if (!customerOwnsVehicle(customer, vehicleId)) {
             System.out.println("Vehicle Id tidak ditemukan pada customer ini.");
             return;
@@ -71,44 +69,37 @@ public class BengkelService {
         PrintService.printService(availableServices);
 
         List<ItemService> selectedServices = new ArrayList<>();
+        Set<String> selectedServiceIds = new HashSet<>();  // Track selected service IDs to prevent duplication
         String serviceId;
         boolean addingMoreServices;
 
         do {
             System.out.println("Silahkan masukan Service Id:");
             serviceId = input.nextLine();
-            ItemService service = findServiceById(serviceId, availableServices);
-            if (service != null) {
-                selectedServices.add(service);
-                System.out.println("Apakah anda ingin menambahkan Service Lainnya? (Y/T)");
-                String response = input.nextLine();
-                addingMoreServices = response.equalsIgnoreCase("Y");
+            if (selectedServiceIds.contains(serviceId)) {
+                System.out.println("Anda sudah menambah service ini.");
             } else {
-                System.out.println("Service Id tidak valid.");
-                addingMoreServices = true;
+                ItemService service = findServiceById(serviceId, availableServices);
+                if (service != null) {
+                    selectedServices.add(service);
+                    selectedServiceIds.add(serviceId);  // Add to the set of selected IDs
+                } else {
+                    System.out.println("Service Id tidak valid.");
+                }
             }
+
+            System.out.println("Apakah anda ingin menambahkan Service Lainnya? (Y/T)");
+            String response = input.nextLine();
+            addingMoreServices = response.equalsIgnoreCase("Y");
         } while (addingMoreServices);
 
         double totalCost = calculateTotalCost(selectedServices);
-        BookingOrder bookingOrder = new BookingOrder(generateBookingId(customerId), customer, selectedServices, "Cash", totalCost, totalCost);
+        String bookingId = generateBookingId(customerId);
+        BookingOrder bookingOrder = new BookingOrder(bookingId, customer, selectedServices, "Cash", totalCost, totalCost);
 
-        // Payment method selection and application of discount if the customer is a MemberCustomer
-        if (customer instanceof MemberCustomer) {
-            System.out.println("Silahkan Pilih Metode Pembayaran (Saldo Coin atau Cash)");
-            System.out.println("1. Saldo Coin\n2. Cash");
-            int paymentChoice = Integer.parseInt(input.nextLine());
+        handlePayment(customer, bookingOrder);
 
-            if (paymentChoice == 1) {
-                bookingOrder.setPaymentMethod("Saldo Coin");
-                bookingOrder.calculatePayment(); // Calculate the discounted price
-                updateMemberSaldo((MemberCustomer) customer, bookingOrder.getTotalPayment());
-            } else {
-                bookingOrder.calculatePayment();
-            }
-        } else {
-            bookingOrder.calculatePayment();
-        }
-
+        BookingOrderRepository.addBooking(bookingOrder);  // Save the booking order
         System.out.println("Booking Berhasil!!!");
         System.out.printf("Total Harga Service : %.2f%n", totalCost);
         System.out.printf("Total Pembayaran : %.2f%n", bookingOrder.getTotalPayment());
@@ -199,9 +190,9 @@ public class BengkelService {
         return total;
     }
 
-    private static String generateBookingId(String customerId) {
-        // Simplified booking ID generation logic
-        return "Book-" + customerId + "-" + ((int) (Math.random() * 1000));
+    public static String generateBookingId(String customerId) {
+        int nextBookingNumber = BookingOrderRepository.getBookingCountForCustomer(customerId) + 1; // Get the next booking sequence number
+        return String.format("Book-Cust-%03d-%03d", nextBookingNumber, Integer.parseInt(customerId.substring(customerId.lastIndexOf('-') + 1)));
     }
 
     private static Customer getCustomerById(String customerId) {
@@ -222,6 +213,22 @@ public class BengkelService {
             return "Member";
         } else {
             return "Non Member";
+        }
+    }
+
+    private static void handlePayment(Customer customer, BookingOrder bookingOrder) {
+        if (customer instanceof MemberCustomer) {
+            System.out.println("Silahkan Pilih Metode Pembayaran (Saldo Coin atau Cash)");
+            int paymentChoice = Integer.parseInt(input.nextLine());
+            if (paymentChoice == 1) {
+                bookingOrder.setPaymentMethod("Saldo Coin");
+                bookingOrder.calculatePayment();
+                updateMemberSaldo((MemberCustomer) customer, bookingOrder.getTotalPayment());
+            } else {
+                bookingOrder.calculatePayment();
+            }
+        } else {
+            bookingOrder.calculatePayment();
         }
     }
     //Booking atau Reservation

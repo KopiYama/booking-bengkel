@@ -1,7 +1,9 @@
 package com.kopiyama.services;
 
+import com.kopiyama.models.BookingOrder;
 import com.kopiyama.models.Customer;
 import com.kopiyama.models.ItemService;
+import com.kopiyama.repositories.BookingOrderRepository;
 import com.kopiyama.repositories.CustomerRepository;
 import com.kopiyama.repositories.ItemServiceRepository;
 
@@ -11,6 +13,10 @@ import java.util.Scanner;
 public class MenuService {
 	private static List<Customer> listAllCustomers = CustomerRepository.getAllCustomer();
 	private static List<ItemService> listAllItemService = ItemServiceRepository.getAllItemService();
+	public static void displayBookingOrders() {
+		List<BookingOrder> bookingOrders = BookingOrderRepository.getAllBookings();
+		PrintService.printBookingOrders(bookingOrders);
+	}
 	private static Scanner input = new Scanner(System.in);
 	private static boolean isLoggedIn = false;
 	public static void run() {
@@ -83,6 +89,7 @@ public class MenuService {
 				break;
 			case 4:
 				//panggil fitur Informasi Booking Order
+				displayBookingOrders();
 				break;
 			default:
 				System.out.println("Logout");
